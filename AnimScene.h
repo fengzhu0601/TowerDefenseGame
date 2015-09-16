@@ -1,0 +1,28 @@
+#pragma once
+
+#include "cocos2d.h"
+
+USING_NS_CC;
+
+class AnimScene : public Layer
+{
+public:
+	AnimScene();
+	~AnimScene();
+    static Scene* createScene();
+
+	virtual bool init();
+	CREATE_FUNC(AnimScene);
+
+	void callAnimationComplete(Ref* ref);
+
+	void readArchive();//∂¡»°Œƒµµ
+	bool isHaveSaveFile();//≈–∂œ «∑Ò”–¥Êµµ
+
+public:
+	Vector<Sprite*> m_pages;
+
+	int animIndex;
+
+	void goToMenuScene();
+};
