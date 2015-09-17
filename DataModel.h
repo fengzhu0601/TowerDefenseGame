@@ -1,6 +1,8 @@
 #pragma once
 
 #include "cocos2d.h"
+#include "WayPoint.h"
+#include "Wave.h"
 
 USING_NS_CC;
 
@@ -17,6 +19,9 @@ public:
 
 	Layer* _gameLayer;//”Œœ∑≤„
 	Layer* _gameHUDLayer;//√Ê∞Â≤„
+
+	static Vector<WayPoint*> m_wayPoints;
+	static Vector<Wave*> m_waves;
 
 	static int maxUnlock;
 	static bool isMusic;

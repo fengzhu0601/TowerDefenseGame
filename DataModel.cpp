@@ -10,6 +10,9 @@ bool DataModel::isShowTeaching = true;
 bool DataModel::isFirstGame = true;
 bool DataModel::isActivatingGame = false;
 
+Vector<WayPoint*> DataModel::m_wayPoints;
+Vector<Wave*> DataModel::m_waves;
+
 DataModel::DataModel()
 {
 	_gameLayer = nullptr;
