@@ -4,6 +4,7 @@
 #include "BaseAttributes.h"
 #include "WayPoint.h"
 #include "Creep.h"
+#include "GameConfig.h"
 
 MainScene::MainScene()
 {
@@ -43,7 +44,7 @@ bool MainScene::init()
 	Tools::saveCurPass(m->isHardMode,m->curPassCount);
 	Tools::saveMode(m->isHardMode);
 	Tools::saveFirstGame(false);
-	auto baseAttributes = BaseAttributes::getInstance();
+	baseAttributes = BaseAttributes::getInstance();
 
 	//=====背景
 	Sprite* gameBg;
@@ -275,7 +276,7 @@ void MainScene::startSchedule()
 }
 void MainScene::update(float df)
 {
-	log("update");
+	//log("update");
 }
 //每0.6s添加一个敌人
 void MainScene::gameLogic(float df)
@@ -299,12 +300,97 @@ void MainScene::addTarget()
 	{
 		Creep* target = Creep::create(wEnemy->m_type);
 		wEnemy->m_count--;
+		//设置生命
+		float tempScaleHP = baseAttributes->scaleHP;
+		//专家模式怪物生命增加1倍
+		if (m->isHardMode)
+		{
+			tempScaleHP += 1.0f;
+		}
+		target->m_curHp += currentLevel * target->m_curHp * tempScaleHP;
+		target->m_totalHp = target->m_curHp;
+		//设置初始坐标
 		WayPoint* waypoint = target->getCurrentWaypoint();
-		target->setPosition(waypoint->getPosition());
+		Vec2 tempWaypoint = waypoint->getPosition();
+		if (target->getTag() >= Creep::boos1)
+		{
+			tempWaypoint+=Vec2(0,20);
+		}
+		target->setPosition(tempWaypoint);
+		//取得下一个路点坐标
+		waypoint = target->getNextWaypoint();
+		Vec2 nextPint = waypoint->getPosition();
+		if (target->getTag() >= Creep::boos1)
+		{
+			nextPint += Vec2(0,20);
+		}
 		tileMap->addChild(target,200);
+
+		//怪物血条
+		target->healthBar = ProgressTimer::create(Sprite::create("health_bar_red.png"));
+		target->healthBar->setType(ProgressTimer::Type::BAR);
+		target->healthBar->setPercentage(100);
+		target->healthBar->setPosition(Vec2(target->getContentSize().width/2,target->getContentSize().height+22));
+		//tileMap->addChild(target->healthBar,3);
+		target->addChild(target->healthBar);
+		//怪物爆照图
+		target->explosionSprite = Sprite::create("explosion.png");
+		target->explosionSprite->setPosition(target->getPosition());
+		target->explosionSprite->setVisible(false);
+		tileMap->addChild(target->explosionSprite);
+
+		//旋转怪物
+		float moveDuration = target->moveDurScale();
+		WayPoint* curWaypoint = target->getCurrentWaypoint();
+		//Vec2 waypointVector = curWaypoint->getPosition() - target->getPosition();
+		float waypointAngle = Vec2::angle(curWaypoint->getPosition(),target->getPosition());
+		float cocosAngle = CC_RADIANS_TO_DEGREES(-1*waypointAngle)+90;
+		float rotateSpeed = 0.05 / M_PI;
+		float rotateDuration = fabs(waypointAngle * rotateSpeed);
+		auto rotateTo = RotateTo::create(rotateDuration,cocosAngle);
+
+		auto actionMove = MoveTo::create(moveDuration,nextPint);
+		auto actionMoveDone = CallFuncN::create(CC_CALLBACK_1(MainScene::followPath,this));
+
+		auto speedAction = Speed::create(Sequence::create(actionMove,actionMoveDone,nullptr),1.0f);
+		target->previousSpeed = 1.0f;
+		speedAction->setTag(kTagSpeed);
+		target->runAction(speedAction);
 	}
 
 }
+
+void MainScene::followPath(Ref* sender)
+{
+	Creep* creep = dynamic_cast<Creep*>(sender);
+	WayPoint* curWaypoint = creep->getCurrentWaypoint();
+	WayPoint* waypoint = creep->getNextWaypoint();
+	//log("%f,%f",curWaypoint->getPositionX(),curWaypoint->getPositionY());
+	//log("%f,%f",waypoint->getPositionX(),waypoint->getPositionY());
+
+	if (waypoint != nullptr)
+	{
+		Vec2 tempWayPoint = waypoint->getPosition();
+		//如果是boos
+		if (creep->getTag() >= Creep::boos1)
+		{
+		}
+		float moveDuration = creep->moveDurScale();
+		auto moveto = MoveTo::create(moveDuration,tempWayPoint);
+		auto moveDone = CallFuncN::create(CC_CALLBACK_1(MainScene::followPath,this));
+		creep->stopAllActions();
+		//旋转怪物
+		float waypointAngle = Vec2::angle(curWaypoint->getPosition(),creep->getPosition());
+		float cocosAngle = CC_RADIANS_TO_DEGREES(-1 * waypointAngle)+90;
+		float rotateSpeed = 0.05 / M_PI;
+		float rotateDuration = fabs(waypointAngle * rotateSpeed);
+
+		auto speedAction = Speed::create(Sequence::create(moveto,moveDone,nullptr),1.0f);
+		speedAction->setTag(kTagSpeed);
+		creep->runAction(speedAction);
+	}
+}
+
 WaveEnemy* MainScene::getWaveEnemy()//获取当前波的类型数量
 {
 	Wave* wave = this->getCurrentWave();

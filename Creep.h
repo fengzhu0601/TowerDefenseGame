@@ -38,9 +38,17 @@ public:
 	bool init(int type);
 public:
 	int m_curHp;//当前血量
+	int m_totalHp;
 	float m_moveSpeed;//移动速度
 	int m_curWaypoint;//当前点
+	ProgressTimer* healthBar;//敌人血条
+	Sprite* explosionSprite;
+	float previousSpeed;//上一次的移动速度
 public:
 	//获取当前点
 	WayPoint* getCurrentWaypoint();
+	WayPoint* getNextWaypoint();
+
+	//得到移动时间
+	float moveDurScale();
 };

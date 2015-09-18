@@ -40,7 +40,7 @@ bool Creep::init(int type)
 	switch (type)
 	{
 	case Creep::grasshopper1:
-		m_curHp = 10;
+		m_curHp = m_totalHp = 10;
 		m_curWaypoint = 0;
 		m_moveSpeed = 2;
 
@@ -99,4 +99,31 @@ WayPoint* Creep::getCurrentWaypoint()
 	auto m = DataModel::getInstance();
 	WayPoint* waypoint = m->m_wayPoints.at(m_curWaypoint);
 	return waypoint;
+}
+
+WayPoint* Creep::getNextWaypoint()
+{
+	auto m = DataModel::getInstance();
+	m_curWaypoint++;
+
+	//如果没有下一个路点
+	if (m_curWaypoint >= m->m_wayPoints.size())
+	{
+		return nullptr;
+	}
+
+	WayPoint* waypoint = m->m_wayPoints.at(m_curWaypoint);
+	return waypoint;
+}
+
+float Creep::moveDurScale()
+{
+	auto m = DataModel::getInstance();
+	float firstDistance = 100;
+
+	WayPoint* waypoint2 = m->m_wayPoints.at(m_curWaypoint-1);
+	WayPoint* waypoint3 = m->m_wayPoints.at(m_curWaypoint);
+	float thisDistance = waypoint2->getPosition().distance(waypoint3->getPosition());
+	float moveScale = thisDistance/firstDistance;
+	return (m_moveSpeed * moveScale);
 }

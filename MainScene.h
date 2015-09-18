@@ -4,6 +4,8 @@
 #include "GameHUD.h"
 #include "WaveEnemy.h"
 #include "Wave.h"
+#include "BaseAttributes.h"
+#include "Creep.h"
 
 USING_NS_CC;
 
@@ -24,6 +26,7 @@ public:
 private:
 	int currentLevel;
 	int currentWaveEnemy;
+	BaseAttributes* baseAttributes;
 private:
 	void createSpriteAnimation(const char* name, Vec2 point,Node* node,int frameNum,float time,int tag);
 
@@ -38,6 +41,8 @@ private:
 	void addWave(Vector<WaveEnemy*>& waveArray);
 	//添加一个敌人到地图上
 	void addTarget();
+
+	void followPath(Ref* sender);
 
 	//游戏循环
 	void update(float df);
